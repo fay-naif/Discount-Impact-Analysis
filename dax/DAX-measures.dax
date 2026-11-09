@@ -1,0 +1,194 @@
+// Measures in the Orders table, grouped by display folder
+
+// ===== KPIs =====
+
+Total Sales =
+    SUM(Orders[sales])
+
+Total Profit =
+    SUM(Orders[profit])
+
+Profit Margin % =
+    DIVIDE([Total Profit], [Total Sales])
+
+Total Orders =
+    DISTINCTCOUNT(Orders[order_id])
+
+Total Customers =
+    DISTINCTCOUNT(Orders[customer_id])
+
+Total Quantity =
+    SUM(Orders[quantity])
+
+Avg Discount =
+    AVERAGE(Orders[discount])
+
+Profit Gain =
+    VAR P = [Total Profit] RETURN IF(P >= 0, P)
+
+Profit Loss =
+    VAR P = [Total Profit] RETURN IF(P < 0, P)
+
+// ===== Returns & Shipping =====
+
+Returned Orders =
+    CALCULATE(DISTINCTCOUNT(Orders[order_id]), Orders[is_returned] = 1)
+
+Return Rate % =
+    DIVIDE([Returned Orders], [Total Orders])
+
+Avg Days to Ship =
+    AVERAGE(Orders[days_to_ship])
+
+// ===== Time Intelligence =====
+
+Sales PY =
+    CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))
+
+Sales YoY % =
+    VAR PY = [Sales PY] RETURN IF(NOT ISBLANK(PY), DIVIDE([Total Sales] - PY, PY))
+
+Profit YoY % =
+    VAR PY = CALCULATE([Total Profit], SAMEPERIODLASTYEAR('Date'[Date])) RETURN IF(NOT ISBLANK(PY), DIVIDE([Total Profit] - PY, ABS(PY)))
+
+Profit LY =
+    CALCULATE([Total Profit], SAMEPERIODLASTYEAR('Date'[Date]))
+
+Orders LY =
+    CALCULATE([Total Orders], SAMEPERIODLASTYEAR('Date'[Date]))
+
+Orders YoY % =
+    DIVIDE([Total Orders] - [Orders LY], [Orders LY])
+
+Margin LY =
+    CALCULATE([Profit Margin %], SAMEPERIODLASTYEAR('Date'[Date]))
+
+Margin YoY pts =
+    IF(NOT ISBLANK([Margin LY]), ([Profit Margin %] - [Margin LY]) * 100)
+
+// ===== Ranking =====
+
+Top 10 Product Sales =
+    IF(ISINSCOPE(Orders[product_name]), VAR R = RANKX(ALLSELECTED(Orders[product_name]), [Total Sales], , DESC) RETURN IF(R <= 10, [Total Sales]))
+
+// ===== Story =====
+
+Order Lines =
+    COUNTROWS(Orders)
+
+Deep Discount Profit =
+    CALCULATE([Total Profit], Orders[discount] > 0.2)
+
+Deep Discount Profit LY =
+    CALCULATE([Deep Discount Profit], SAMEPERIODLASTYEAR('Date'[Date]))
+
+Deep Discount Loss YoY % =
+    IF(NOT ISBLANK([Deep Discount Profit LY]), DIVIDE([Deep Discount Profit] - [Deep Discount Profit LY], ABS([Deep Discount Profit LY])) * -1)
+
+Deep Discount Lines =
+    CALCULATE([Order Lines], Orders[discount] > 0.2)
+
+Deep Discount Share =
+    DIVIDE([Deep Discount Lines], [Order Lines])
+
+Deep Discount Lines Losing % =
+    DIVIDE(CALCULATE([Order Lines], Orders[discount] > 0.2, Orders[profit] < 0), [Deep Discount Lines])
+
+Profit Excl Deep Discounts =
+    CALCULATE([Total Profit], Orders[discount] <= 0.2)
+
+Margin Excl Deep Discounts =
+    DIVIDE([Profit Excl Deep Discounts], CALCULATE([Total Sales], Orders[discount] <= 0.2))
+
+Loss Lines =
+    CALCULATE([Order Lines], Orders[profit] < 0)
+
+% Lines Losing Money =
+    DIVIDE([Loss Lines], [Order Lines])
+
+// ===== Story · colours =====
+
+Margin Healthy =
+    VAR m = [Profit Margin %] RETURN IF(m >= 0.1, m)
+
+Margin Thin =
+    VAR m = [Profit Margin %] RETURN IF(m >= 0 && m < 0.1, m)
+
+Margin Negative =
+    VAR m = [Profit Margin %] RETURN IF(m < 0, m)
+
+Margin Colour =
+    SWITCH(TRUE(), [Profit Margin %] < 0, "#C4502F", [Profit Margin %] < 0.10, "#E0805F", "#4A1F3D")
+
+Discount Colour =
+    IF([Avg Discount] > 0.2, "#C4502F", "#8B7882")
+
+// ===== KPI cards =====
+
+Latest FY =
+    YEAR(CALCULATE(MAX(Orders[order_date]), REMOVEFILTERS('Date')))
+
+Sales FY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Total Sales], REMOVEFILTERS('Date'), 'Date'[Year] = Y)
+
+Sales PFY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Total Sales], REMOVEFILTERS('Date'), 'Date'[Year] = Y - 1)
+
+Profit FY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Total Profit], REMOVEFILTERS('Date'), 'Date'[Year] = Y)
+
+Profit PFY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Total Profit], REMOVEFILTERS('Date'), 'Date'[Year] = Y - 1)
+
+Margin FY =
+    DIVIDE([Profit FY], [Sales FY])
+
+Margin PFY =
+    DIVIDE([Profit PFY], [Sales PFY])
+
+Orders FY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Total Orders], REMOVEFILTERS('Date'), 'Date'[Year] = Y)
+
+Orders PFY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Total Orders], REMOVEFILTERS('Date'), 'Date'[Year] = Y - 1)
+
+Deep Loss FY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Deep Discount Profit], REMOVEFILTERS('Date'), 'Date'[Year] = Y)
+
+Deep Loss PFY =
+    VAR Y = [Latest FY] RETURN CALCULATE([Deep Discount Profit], REMOVEFILTERS('Date'), 'Date'[Year] = Y - 1)
+
+Sales FY vs PY =
+    VAR c = [Sales FY] VAR p = [Sales PFY] VAR d = DIVIDE(c - p, ABS(p)) RETURN IF(ISBLANK(p) || ISBLANK(c), BLANK(), IF(d >= 0, "▲ ", "▼ ") & FORMAT(ABS(d), "0.0%") & " vs FY" & ([Latest FY] - 1))
+
+Profit FY vs PY =
+    VAR c = [Profit FY] VAR p = [Profit PFY] VAR d = DIVIDE(c - p, ABS(p)) RETURN IF(ISBLANK(p) || ISBLANK(c), BLANK(), IF(d >= 0, "▲ ", "▼ ") & FORMAT(ABS(d), "0.0%") & " vs FY" & ([Latest FY] - 1))
+
+Orders FY vs PY =
+    VAR c = [Orders FY] VAR p = [Orders PFY] VAR d = DIVIDE(c - p, ABS(p)) RETURN IF(ISBLANK(p) || ISBLANK(c), BLANK(), IF(d >= 0, "▲ ", "▼ ") & FORMAT(ABS(d), "0.0%") & " vs FY" & ([Latest FY] - 1))
+
+Deep Loss FY vs PY =
+    VAR c = [Deep Loss FY] VAR p = [Deep Loss PFY] VAR d = DIVIDE(c - p, ABS(p)) * -1 RETURN IF(ISBLANK(p) || ISBLANK(c), BLANK(), IF(d >= 0, "▲ ", "▼ ") & FORMAT(ABS(d), "0.0%") & " more lost vs FY" & ([Latest FY] - 1))
+
+Margin FY vs PY =
+    VAR c = [Margin FY] VAR p = [Margin PFY] VAR d = (c - p) * 100 RETURN IF(ISBLANK(p) || ISBLANK(c), BLANK(), IF(d >= 0, "▲ ", "▼ ") & FORMAT(ABS(d), "0.0") & " pts vs FY" & ([Latest FY] - 1))
+
+// ===== Top 5 loss states =====
+
+Loss State Rank =
+    IF(ISINSCOPE(Orders[state]), RANKX(ALLSELECTED(Orders[state]), [Total Profit], , ASC, Dense))
+
+Top5 Loss Profit =
+    VAR r = [Loss State Rank] VAR p = [Total Profit] RETURN IF(NOT ISBLANK(r) && r <= 5 && p < 0, p)
+
+Top5 Rank =
+    IF(NOT ISBLANK([Top5 Loss Profit]), [Loss State Rank])
+
+Top5 Loss Sales =
+    IF(NOT ISBLANK([Top5 Loss Profit]), [Total Sales])
+
+Top5 Loss Avg Discount =
+    IF(NOT ISBLANK([Top5 Loss Profit]), [Avg Discount])
+
+Top5 Loss Margin =
+    IF(NOT ISBLANK([Top5 Loss Profit]), [Profit Margin %])

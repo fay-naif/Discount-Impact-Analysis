@@ -1,0 +1,113 @@
+{
+  "name": "Aubergine & Terracotta – Fay",
+  "dataColors": [
+    "#4A1F3D",
+    "#C4502F",
+    "#B8893B",
+    "#B98DAA",
+    "#E0805F",
+    "#5E7A4E",
+    "#7A4569",
+    "#F2C2AE",
+    "#D9B56E",
+    "#8B7882"
+  ],
+  "background": "#F6EFE4",
+  "foreground": "#2A1824",
+  "tableAccent": "#4A1F3D",
+  "good": "#5E7A4E",
+  "neutral": "#B8893B",
+  "bad": "#C4502F",
+  "maximum": "#4A1F3D",
+  "center": "#EFE3D3",
+  "minimum": "#C4502F",
+  "textClasses": {
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "color": "#4A1F3D",
+      "fontSize": 14
+    },
+    "callout": {
+      "fontFace": "Segoe UI Bold",
+      "color": "#4A1F3D",
+      "fontSize": 32
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "color": "#8B7882",
+      "fontSize": 10
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "color": "#2A1824",
+      "fontSize": 10
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#FFFBF4"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#E7DACA"
+              }
+            },
+            "radius": 14
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ],
+        "title": [
+          {
+            "show": true,
+            "fontColor": {
+              "solid": {
+                "color": "#4A1F3D"
+              }
+            },
+            "fontSize": 14
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F6EFE4"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F6EFE4"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
